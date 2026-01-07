@@ -96,7 +96,7 @@ function App() {
       } catch {}
       wsRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps 
   }, [room]);
 
   function addToast(text: string) {

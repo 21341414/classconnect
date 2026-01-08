@@ -20,15 +20,14 @@ function App() {
   });
 
   const [editingName, setEditingName] = useState<string>(name);
-
-  useEffect(() => {
-    localStorage.setItem("cc:name", name);
-  }, [name]);
-
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { room } = useParams();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem("cc:name", name);
+  }, [name]);
 
   const socket = usePartySocket({
     party: "chat",
@@ -90,350 +89,251 @@ function App() {
   }, [messages]);
 
   return (
-    <div className="cc-root">
+    <div style={{ display: "flex", justifyContent: "center", padding: 18 }}>
       <style>{`
-/* From Uiverse.io by Cobp (flattened from nested syntax to plain CSS) */
-:root {
-  --accent: #9147ff;
-  --accent-2: #ff4141;
-  --input-bg: #e9e9e9;
-  --muted: #959595;
-  --text: #2b2b2b;
+/* From Uiverse.io by Yaya12085 (kept minimal, flattened) */
+.card {
+  max-width: 320px;
+  border-width: 1px;
+  border-color: rgba(219, 234, 254, 1);
+  border-radius: 1rem;
+  background-color: rgba(255, 255, 255, 1);
+  padding: 1rem;
+  border-style: solid;
 }
 
-.cc-root {
-  min-height: 100vh;
+.header {
+  display: flex;
+  align-items: center;
+  grid-gap: 1rem;
+  gap: 1rem;
+}
+
+.icon {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #f6f7fb 0%, #ffffff 100%);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  padding: 24px;
+  border-radius: 9999px;
+  background-color: rgba(96, 165, 250, 1);
+  padding: 0.5rem;
+  color: rgba(255, 255, 255, 1);
 }
 
-.chat-card {
-  width: 340px;
-  max-width: 92vw;
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(20,20,30,0.06);
-  padding: 12px;
+.icon svg {
+  height: 1rem;
+  width: 1rem;
 }
 
-.room {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:8px;
+.alert {
+  font-weight: 600;
+  color: rgba(107, 114, 128, 1);
 }
-.room .title { font-weight:600; color:var(--text); font-size:14px; }
-.room .meta { color:var(--muted); font-size:12px; }
 
+.message {
+  margin-top: 0.75rem;
+  color: rgba(107, 114, 128, 1);
+  font-size: 0.95rem;
+}
+
+/* simple message list */
 .messages {
-  max-height: 48vh;
+  margin-top: 0.75rem;
+  max-height: 36vh;
   overflow: auto;
   display:flex;
   flex-direction:column;
-  gap:8px;
-  padding:6px;
-  margin-bottom:10px;
+  gap: 8px;
+  padding-right: 4px;
 }
 
-.msg {
+.msg-row {
   display:flex;
-  gap:8px;
-  align-items:flex-end;
+  gap: 8px;
+  align-items:flex-start;
 }
-.msg .who {
-  width:64px;
-  font-size:12px;
+
+.msg-user {
   font-weight:600;
-  color:var(--text);
+  color: rgba(55,65,81,1);
+  width: 68px;
+  font-size: 0.85rem;
 }
 
-.bubble {
-  padding:10px 12px;
-  border-radius:14px;
-  max-width:75%;
-  background: #fbfbfb;
-  color:var(--text);
-  box-shadow: 0 2px 6px rgba(20,20,30,0.04);
-  word-break:break-word;
-  font-size:14px;
+.msg-bubble {
+  background: rgba(245,247,250,1);
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: rgba(55,65,81,1);
+  font-size: 0.92rem;
+  max-width: 100%;
+  word-break: break-word;
 }
 
-.msg.mine {
-  justify-content:flex-end;
-}
-.msg.mine .who { display:none; }
-.msg.mine .bubble {
-  background: linear-gradient(135deg, #2d8cf0 0%, #5b9ffd 100%);
-  color:white;
-  border-bottom-right-radius:6px;
-}
-
-.empty {
-  text-align:center;
-  color:var(--muted);
-  font-size:13px;
-  padding:8px 6px;
-}
-
-/* --- Uiverse-ish input area (flattened) --- */
-.input-row {
-  position: relative;
-  display: flex;
-  align-items: center;
+.msg-row.mine {
   justify-content: flex-end;
-  width: 100%;
-  height: 44px;
 }
 
-.container-upload-files {
-  position: absolute;
-  left: 6px;
-  display: flex;
-  color: #aaaaaa;
-  gap:6px;
-  transition: all 0.35s ease;
-  align-items:center;
-}
-.container-upload-files .upload-file {
-  margin: 0 2px;
-  padding: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius:8px;
-}
-.container-upload-files .upload-file:hover {
-  color: #4c4c4c;
-  transform: scale(1.08);
+.msg-row.mine .msg-user { display:none; }
+.msg-row.mine .msg-bubble {
+  background: rgba(59,130,246,1);
+  color: white;
 }
 
-.container-ia-chat {
-  position: relative;
+/* actions area (input + button) */
+.actions {
+  margin-top: 1rem;
   display: flex;
+  gap: 8px;
   align-items: center;
-  justify-content: end;
-  width: 100%;
 }
 
-.input-text {
-  max-width: 190px;
-  width: 100%;
-  margin-left: 72px;
-  padding: 0.75rem 1rem;
-  padding-right: 46px;
-  border-radius: 50px;
+.input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(226,232,240,1);
+  font-size: 0.95rem;
+}
+
+.send {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(59,130,246,1);
+  color: white;
   border: none;
-  outline: none;
-  background-color: var(--input-bg);
-  color: #4c4c4c;
-  font-size: 14px;
-  line-height: 18px;
-  font-weight: 500;
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05);
-  z-index: 999;
-}
-.input-text::placeholder { color: var(--muted); }
-.input-text::selection { background-color: #4c4c4c; color: #e9e9e9; }
-
-.container-ia-chat:focus-within .input-text {
-  max-width: 250px;
-  margin-left: 42px;
-}
-.container-ia-chat:focus-within .container-upload-files {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  filter: blur(5px);
-}
-
-.label-files {
-  position: absolute;
-  top: 50%;
-  left: 6px;
-  transform: translateX(-20px) translateY(-50%) scale(1);
-  display: flex;
-  padding: 0.5rem;
-  color: var(--muted);
-  background-color: var(--input-bg);
-  border-radius: 50px;
   cursor: pointer;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05);
-}
-.container-ia-chat:focus-within .label-files {
-  transform: translateX(0) translateY(-50%) scale(1);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: all;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.label-text {
-  position: absolute;
-  top: 50%;
-  right: 0.25rem;
-  transform: translateX(0) translateY(-50%) scale(1);
-  width: 36px;
-  height: 36px;
-  display: flex;
-  padding: 6px;
+.read {
+  background-color: rgba(59, 130, 246, 1);
+  color: rgba(255, 255, 255, 1);
+}
+
+.mark-as-read {
+  margin-top: 0.5rem;
+  background-color: rgba(249, 250, 251, 1);
+  color: rgba(107, 114, 128, 1);
+  transition: all .15s ease;
   border: none;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05);
-  z-index: 999;
-  color: #ffffff;
-  background: linear-gradient(to top right, var(--accent), var(--accent-2));
-  border-radius: 50px;
-  align-items:center;
-  justify-content:center;
-  box-shadow: 0 6px 18px rgba(145,71,255,0.12);
-}
-.label-text:active { transform: translateX(0) translateY(-50%) scale(0.96); }
-
-.icon {
-  width: 18px;
-  height: 18px;
-  display:inline-block;
+  padding: 8px 10px;
+  border-radius: 8px;
 }
 
-/* small responsive tweak */
-@media (max-width: 380px) {
-  .input-text { max-width: 160px; }
-  .container-ia-chat:focus-within .input-text { max-width: 220px; }
+.mark-as-read:hover {
+  background-color: rgb(230, 231, 233);
 }
-
-/* Portions of the original Uiverse CSS for visual flair (animations) have been omitted to keep this file minimal while preserving the core look */
       `}</style>
 
-      <div className="chat-card">
-        <div className="room">
-          <div className="title">Room: {room}</div>
-          <div className="meta">
-            {messages.length} message{messages.length !== 1 ? "s" : ""}
+      <div className="card" role="region" aria-label={`Chat room ${room}`}>
+        <div className="header">
+          <div className="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M2 12a10 10 0 1118 6l3 3-3 0a10 10 0 01-18-9z" fill="currentColor" />
+            </svg>
+          </div>
+          <div>
+            <div className="alert">Room: {room}</div>
+            <div style={{ fontSize: 12, color: "rgba(107,114,128,1)" }}>{messages.length} message{messages.length !== 1 ? "s" : ""}</div>
           </div>
         </div>
 
-        <div className="messages" ref={messagesRef}>
+        <div className="message">Simple, minimal chat — no extra background or heavy decorations.</div>
+
+        <div className="messages" ref={messagesRef} aria-live="polite">
           {messages.length === 0 ? (
-            <div className="empty">No messages yet — say hi 👋</div>
+            <div style={{ color: "rgba(107,114,128,1)", textAlign: "center", padding: 8 }}>No messages yet — be the first 👋</div>
           ) : (
             messages.map((m) => (
-              <div key={m.id} className={`msg ${m.user === name ? "mine" : ""}`}>
-                {m.user !== name && <div className="who">{m.user}</div>}
-                <div className="bubble">{m.content}</div>
+              <div key={m.id} className={`msg-row ${m.user === name ? "mine" : ""}`}>
+                {m.user !== name && <div className="msg-user">{m.user}</div>}
+                <div className="msg-bubble">{m.content}</div>
               </div>
             ))
           )}
         </div>
 
-        {/* name row */}
         <form
-          className="name-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const el = e.currentTarget.elements.namedItem("content") as HTMLInputElement;
+            const val = (el?.value || "").trim();
+            if (!val) {
+              el.value = "";
+              inputRef.current?.focus();
+              return;
+            }
+
+            const chatMessage: ChatMessage = {
+              id: nanoid(8),
+              content: val,
+              user: name,
+              role: "user",
+            };
+
+            setMessages((prev) => [...prev, chatMessage]);
+            socket.send(JSON.stringify({ type: "add", ...chatMessage } satisfies Message));
+            el.value = "";
+            inputRef.current?.focus();
+          }}
+          className="actions"
+        >
+          <input
+            ref={inputRef}
+            name="content"
+            className="input"
+            placeholder={`Hello ${name}`}
+            autoComplete="off"
+            aria-label="Message"
+          />
+          <button type="submit" className="send" aria-label="Send">Send</button>
+        </form>
+
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <button
+            type="button"
+            className="mark-as-read"
+            onClick={() => {
+              // small convenience: clear messages locally
+              setMessages([]);
+            }}
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            className="read"
+            onClick={() => {
+              alert("There are no unread items in this minimal UI.");
+            }}
+          >
+            Info
+          </button>
+        </div>
+
+        {/* name setter kept minimal */}
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             const newName = editingName.trim() || name;
             if (newName === name) {
-              alert(`Name unchanged: ${name}`);
               return;
             }
             setName(newName);
-            alert(`Name set to ${newName}`);
           }}
-          style={{ marginBottom: 8, display: "flex", gap: 8 }}
+          style={{ marginTop: 12, display: "flex", gap: 8 }}
         >
           <input
-            type="text"
             name="name"
-            className="my-input-text"
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
+            className="input"
             placeholder="Display name"
-            style={{
-              flex: 1,
-              padding: "8px 10px",
-              borderRadius: 8,
-              border: "1px solid #eee",
-            }}
+            aria-label="Display name"
           />
-          <button
-            type="submit"
-            className="set-btn"
-            style={{
-              padding: "8px 10px",
-              borderRadius: 8,
-              background: "#2d8cf0",
-              color: "white",
-              border: "none",
-            }}
-          >
-            Set
-          </button>
-        </form>
-
-        {/* input area using Uiverse classes */}
-        <form
-          className="input-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const content = e.currentTarget.elements.namedItem(
-              "content",
-            ) as HTMLInputElement;
-            const trimmed = (content.value || "").trim();
-            if (!trimmed) {
-              content.value = "";
-              inputRef.current?.focus();
-              return;
-            }
-            const chatMessage: ChatMessage = {
-              id: nanoid(8),
-              content: trimmed,
-              user: name,
-              role: "user",
-            };
-            setMessages((messages) => [...messages, chatMessage]);
-
-            socket.send(
-              JSON.stringify({
-                type: "add",
-                ...chatMessage,
-              } satisfies Message),
-            );
-
-            content.value = "";
-            inputRef.current?.focus();
-          }}
-        >
-          <div className="container-ia-chat" title="Chat input area">
-            <div className="container-upload-files" aria-hidden="true">
-              <div className="upload-file" title="Attach">📎</div>
-              <div className="upload-file" title="Image">🖼️</div>
-            </div>
-
-            <label className="label-files" htmlFor="file-input" title="Upload files">
-              + files
-            </label>
-
-            <input
-              ref={inputRef}
-              name="content"
-              className="input-text"
-              type="text"
-              placeholder={`Hello ${name}!`}
-              autoComplete="off"
-            />
-
-            <button aria-label="Send" className="label-text" type="submit" title="Send message">
-              <svg className="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 21L23 12L2 3L8 12L2 21Z" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
+          <button type="submit" className="mark-as-read">Set</button>
         </form>
       </div>
     </div>

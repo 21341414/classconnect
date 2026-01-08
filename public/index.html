@@ -14,11 +14,10 @@
     <link rel="stylesheet" href="styles.css" />
 
     <link rel="icon" type="image/ico" href="favicon.ico" />
-    <!-- Intentionally no <script> tags here — index.tsx / your bundler should mount into #root -->
+    <!-- This HTML intentionally keeps things minimal. index.tsx (built to /dist/index.js) will mount the app. -->
   </head>
 
   <body>
-    <!-- React will mount into this element (index.tsx -> createRoot(document.getElementById('root')) ) -->
     <div id="root"></div>
 
     <noscript>
@@ -26,5 +25,8 @@
         This app requires JavaScript. Please enable JavaScript in your browser.
       </div>
     </noscript>
+
+    <!-- Bundle entry: your index.tsx should be built to /dist/index.js (type="module") -->
+    <script type="module" src="/dist/index.js"></script>
   </body>
 </html>

@@ -64,7 +64,7 @@ html,body,#root{height:100%;margin:0;background:var(--page-bg);font-family:-appl
 .message-row{display:flex;gap:12px;align-items:flex-start}
 .avatar{width:36px;height:36px;border-radius:8px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:700;color:#374151}
 .bubble{background:var(--input-bg);color:#111827;padding:10px 14px;border-radius:12px;max-width:80%;border:1px solid rgba(16,24,40,0.03);box-shadow:0 6px 12px rgba(16,24,40,0.04)}
-.bubble.me{background:var(--accent);color:white;border:none;box-shadow:0 8px 20px rgba(108,92,231,0.08);align-self:flex-end}
+.bubble.me{background:transparent;color:black;border:none;box-shadow:0 8px 20px rgba(108,92,231,0.08);align-self:flex-end}
 .composer-wrapper{display:flex;justify-content:center;padding:18px 0}
 .input-container{width:640px;display:flex;justify-content:center}
 .right-column{border-left:1px solid rgba(16,24,40,0.04);padding:20px;overflow:auto;background:transparent}

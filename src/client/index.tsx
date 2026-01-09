@@ -243,40 +243,35 @@ function AppInner() {
   const navigate = useNavigate();
   const roomId = room ?? "general";
 
-const [name, setName] = useState(() => {
-  try { const v = localStorage.getItem("cc:name"); if (v) return v; } catch {}
-  const n = names[Math.floor(Math.random() * names.length)];
-  try { localStorage.setItem("cc:name", n); } catch {}
-  return n;
-});
-
-const [draft, setDraft] = useState(name);
-
-const [clientId] = useState(() => {
-  try { const v = localStorage.getItem("cc:clientId"); if (v) return v; } catch {}
-  const id = nanoid(8);
-  try { localStorage.setItem("cc:clientId", id); } catch {}
-  return id;
-});
-
-  
+  // ------------------- user info -------------------
   const [name, setName] = useState(() => {
-  try { const v = localStorage.getItem("cc:name"); if (v) return v; } catch {}
-  const n = names[Math.floor(Math.random() * names.length)];
-  try { localStorage.setItem("cc:name", n); } catch {}
-  return n;
-});
+    try {
+      const v = localStorage.getItem("cc:name");
+      if (v) return v;
+    } catch {}
+    const n = names[Math.floor(Math.random() * names.length)];
+    try { localStorage.setItem("cc:name", n); } catch {}
+    return n;
+  });
 
+  const [draft, setDraft] = useState(name);
 
   const [clientId] = useState(() => {
-    try { const v = localStorage.getItem("cc:clientId"); if (v) return v; } catch {}
+    try {
+      const v = localStorage.getItem("cc:clientId");
+      if (v) return v;
+    } catch {}
     const id = nanoid(8);
     try { localStorage.setItem("cc:clientId", id); } catch {}
     return id;
   });
 
+  // ------------------- messages + participants -------------------
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [participants, setParticipants] = useState<{ user: string; id?: string; status: "online" | "offline"; lastSeen?: string }[]>([]);
+  const [participants, setParticipants] = useState<
+    { user: string; id?: string; status: "online" | "offline"; lastSeen?: string }[]
+  >([]);
+
   const socketRef = useRef<any>(null);
   const pendingRef = useRef<Map<string, any>>(new Map());
 
@@ -286,26 +281,24 @@ const [clientId] = useState(() => {
       const raw = localStorage.getItem(`cc:messages:${roomId}`);
       if (raw) setMessages(JSON.parse(raw));
       else setMessages([]);
-    } catch {
-      setMessages([]);
-    }
+    } catch { setMessages([]); }
+
     try {
       const pr = localStorage.getItem(`cc:participants:${roomId}`);
       if (pr) setParticipants(JSON.parse(pr));
       else setParticipants([]);
-    } catch {
-      setParticipants([]);
-    }
+    } catch { setParticipants([]); }
   }, [roomId]);
 
   useEffect(() => {
     try { localStorage.setItem(`cc:messages:${roomId}`, JSON.stringify(messages.slice(-500))); } catch {}
   }, [messages, roomId]);
+
   useEffect(() => {
     try { localStorage.setItem(`cc:participants:${roomId}`, JSON.stringify(participants)); } catch {}
   }, [participants, roomId]);
 
-  // reconcile incoming
+  // ------------------- reconcile incoming messages -------------------
   const reconcile = useCallback((msg: Message) => {
     setMessages((prev) => {
       const i = prev.findIndex((m) => m.id === msg.id);
@@ -329,7 +322,7 @@ const [clientId] = useState(() => {
     });
   }, []);
 
-  // incoming handler
+  // ------------------- socket + presence -------------------
   const onMessage = useCallback((evt: MessageEvent) => {
     try {
       const data = JSON.parse(evt.data as string) as Message;
@@ -370,9 +363,9 @@ const [clientId] = useState(() => {
       });
     },
   });
+
   useEffect(() => { socketRef.current = partySocket; }, [partySocket]);
 
-  // presence heartbeat
   useEffect(() => {
     const sendPresence = (status: "online" | "offline") => {
       try { socketRef.current?.send(JSON.stringify({ type: "presence", user: name, status, id: clientId, lastSeen: new Date().toISOString() })); } catch {}
@@ -387,12 +380,13 @@ const [clientId] = useState(() => {
     const hb = window.setInterval(() => sendPresence("online"), 30000);
     const onUnload = () => sendPresence("offline");
     window.addEventListener("beforeunload", onUnload);
-    return () => { clearInterval(hb); try { socketRef.current?.send(JSON.stringify({ type: "presence", user: name, status: "offline", id: clientId, lastSeen: new Date().toISOString() })); } catch {} window.removeEventListener("beforeunload", onUnload); };
+    return () => { clearInterval(hb); window.removeEventListener("beforeunload", onUnload); };
   }, [name, clientId]);
 
-  // send text or file
+  // ------------------- send text or file -------------------
   const send = useCallback((opts: { text?: string; file?: File }) => {
     if (!opts.text && !opts.file) return;
+
     if (opts.file) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -405,13 +399,14 @@ const [clientId] = useState(() => {
       reader.readAsDataURL(opts.file);
       return;
     }
+
     const payload: any = { type: "add", id: nanoid(12), content: opts.text, user: name, role: "user", created_at: new Date().toISOString() };
     pendingRef.current.set(payload.id, payload);
     try { socketRef.current?.send(JSON.stringify(payload)); } catch {}
     setMessages((prev) => [...prev, { ...payload, pending: true } as any]);
   }, [name]);
 
-  // paste-to-image
+  // ------------------- paste-to-image -------------------
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       if (!e.clipboardData) return;
@@ -426,7 +421,6 @@ const [clientId] = useState(() => {
     return () => window.removeEventListener("paste", onPaste);
   }, [send]);
 
-  // simple navigation by URL (no UI channels)
   const goto = useCallback((r: string) => navigate(`/${r}`), [navigate]);
 
   return (

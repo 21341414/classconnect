@@ -29,7 +29,7 @@ type Participant = {
   id?: string;
 };
 
-/* ---------------- persistent state helper (defensive) ---------------- */
+/* ---------------- persistent helper ---------------- */
 function usePersistentState<T>(key: string, initial: T | (() => T)) {
   const initializer = typeof initial === "function" ? (initial as () => T) : () => initial;
   const [state, setState] = useState<T>(() => {
@@ -48,7 +48,7 @@ function usePersistentState<T>(key: string, initial: T | (() => T)) {
   return [state, setState] as const;
 }
 
-/* ---------------- styles (match image: clean left sidebar with groups) ---------------- */
+/* ---------------- styles (sidebar like image + bottom nav) ---------------- */
 const styles = (theme: Theme) => {
   const isDark = theme === "dark";
   const bg = isDark ? "#0b1220" : "#f5f6f8";
@@ -63,8 +63,7 @@ const styles = (theme: Theme) => {
       width: "100vw",
       height: "100vh",
       display: "grid",
-      // servers | left menu (folders/dms) | center | right
-      gridTemplateColumns: "72px 300px 1fr 340px",
+      gridTemplateColumns: "72px 300px 1fr 320px",
       gridTemplateRows: "72px 1fr",
       gap: 0,
       background: bg,
@@ -74,8 +73,7 @@ const styles = (theme: Theme) => {
       boxSizing: "border-box" as const,
       overflow: "hidden",
     },
-
-    /* left-most servers column */
+    /* very left server column */
     serversCol: {
       gridColumn: "1 / 2",
       gridRow: "1 / -1",
@@ -98,28 +96,23 @@ const styles = (theme: Theme) => {
       border: "none",
     },
 
-    /* second column: the clean white panel with rounded left corners (matching image) */
+    /* left sidebar (channels list like image) */
     leftPanel: {
       gridColumn: "2 / 3",
       gridRow: "1 / -1",
       background: sidebarBg,
       borderRight: `1px solid ${isDark ? "#0b1722" : "#eef2f7"}`,
-      padding: "20px 18px",
+      padding: "18px",
       boxSizing: "border-box" as const,
       display: "flex",
       flexDirection: "column" as const,
       gap: 14,
-      // big rounded left edge like the example
       borderTopLeftRadius: 18,
       borderBottomLeftRadius: 18,
+      position: "relative" as const,
+      overflow: "auto",
     },
-
-    brand: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      paddingBottom: 6,
-    },
+    brand: { display: "flex", alignItems: "center", gap: 12, paddingBottom: 6 },
     brandLogo: {
       width: 36,
       height: 36,
@@ -134,73 +127,30 @@ const styles = (theme: Theme) => {
     },
     brandTitle: { fontWeight: 800, fontSize: 18 },
 
-    /* grouped menu */
     groupLabel: { fontSize: 13, color: muted, marginTop: 6, marginBottom: 6 },
-    pillItem: {
+    channelRow: {
       display: "flex",
       alignItems: "center",
       gap: 12,
-      padding: "10px 12px",
-      borderRadius: 12,
+      padding: "8px 10px",
+      borderRadius: 10,
       cursor: "pointer",
-      background: "transparent",
     },
-    pillItemActive: {
+    channelRowActive: {
       background: selectedBg,
-      boxShadow: "inset 0 1px 0 rgba(0,0,0,0.02)",
     },
-    pillIcon: {
-      width: 36,
-      height: 36,
+    channelIcon: {
+      width: 28,
+      height: 28,
       borderRadius: 8,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "#eef2ff",
-      fontWeight: 700,
-      flexShrink: 0,
-    },
-    badge: {
-      marginLeft: "auto",
-      background: "#ffffff",
-      border: `1px solid rgba(0,0,0,0.04)`,
-      padding: "4px 8px",
-      borderRadius: 10,
-      fontSize: 13,
-      color: muted,
-    },
-
-    /* conversation list style for the Scenes/DMs area */
-    convList: {
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: 8,
-      overflow: "auto",
-    },
-    convItem: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "10px 12px",
-      borderRadius: 10,
-      cursor: "pointer",
-    },
-    convItemActive: {
-      background: selectedBg,
-    },
-    convItemIcon: {
-      width: 36,
-      height: 36,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      borderRadius: 8,
-      background: "#fff",
-      boxShadow: "0 6px 18px rgba(16,24,40,0.04)",
+      background: "#f3f4f6",
       flexShrink: 0,
     },
 
-    /* center message area */
+    /* center header + content */
     header: {
       gridColumn: "3 / 4",
       gridRow: "1 / 2",
@@ -223,7 +173,6 @@ const styles = (theme: Theme) => {
       minHeight: 0,
       overflow: "hidden",
     },
-
     messagesPanel: {
       flex: 1,
       display: "flex",
@@ -241,7 +190,6 @@ const styles = (theme: Theme) => {
       paddingLeft: 8,
     },
 
-    /* composer */
     composerWrap: {
       borderTop: `1px solid ${isDark ? "#071622" : "#eef2f7"}`,
       paddingTop: 12,
@@ -257,7 +205,7 @@ const styles = (theme: Theme) => {
       fontSize: 14,
     },
 
-    /* right profile */
+    /* right panel */
     rightPanel: {
       gridColumn: "4 / 5",
       gridRow: "1 / -1",
@@ -285,6 +233,40 @@ const styles = (theme: Theme) => {
       maxWidth: "70%",
       wordBreak: "break-word" as const,
       border: "1px solid #f1f3f5",
+    },
+
+    /* bottom nav that mimics the mobile bar in the image */
+    bottomNavWrap: {
+      position: "sticky" as const,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      marginTop: 12,
+      paddingTop: 12,
+      paddingBottom: 12,
+      background: "transparent",
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 10,
+    },
+    bottomNav: {
+      display: "flex",
+      gap: 8,
+      alignItems: "center",
+      width: "100%",
+      justifyContent: "space-around",
+      padding: "10px 8px",
+      borderRadius: 12,
+      background: "transparent",
+    },
+    navItem: {
+      display: "flex",
+      flexDirection: "column" as const,
+      alignItems: "center",
+      gap: 6,
+      color: muted,
+      cursor: "pointer",
+      fontSize: 12,
     },
 
     muted,
@@ -324,6 +306,7 @@ function AppInner() {
   const participantsKey = `cc:participants:${roomId}`;
   const [participants, setParticipants] = usePersistentState<Participant[]>(participantsKey, []);
 
+  // servers persisted (no DM system anymore)
   const [servers, setServers] = usePersistentState<ServerItem[]>("cc:servers", () => {
     try {
       const raw = localStorage.getItem("cc:servers");
@@ -336,13 +319,13 @@ function AppInner() {
           if (typeof item === "string") {
             const id = item.trim();
             if (!id) return null;
-            return { id, label: id.slice(0, 6), type: id.startsWith("dm--") ? "dm" : "server" } as ServerItem;
+            return { id, label: id.slice(0, 6), type: "server" } as ServerItem;
           }
           if (typeof item === "object") {
             const id = item.id ?? (typeof item.label === "string" ? item.label : null);
             if (!id) return null;
             const sid = String(id);
-            return { id: sid, label: item.label ?? sid.slice(0, 6), type: item.type === "dm" ? "dm" : "server" } as ServerItem;
+            return { id: sid, label: item.label ?? sid.slice(0, 6), type: "server" } as ServerItem;
           }
           return null;
         })
@@ -362,8 +345,8 @@ function AppInner() {
     if (!found) {
       const item: ServerItem = {
         id: roomId,
-        label: roomId.startsWith("dm--") ? `DM ${roomId.slice(4, 10)}` : String(roomId).slice(0, 6),
-        type: roomId.startsWith("dm--") ? "dm" : "server",
+        label: String(roomId).slice(0, 6),
+        type: "server",
       };
       setServers((prev) => {
         if (prev.some((p) => p && p.id === item.id)) return prev;
@@ -434,7 +417,7 @@ function AppInner() {
           })) as Participant[];
           setParticipants(normalized);
         } else {
-          // ignore
+          // ignore unknown/system messages
         }
       } catch (err) {
         console.warn("Failed to parse incoming message", err);
@@ -501,7 +484,7 @@ function AppInner() {
       user: name,
       role: "user",
     };
-    addMessage(chatMessage); // optimistic, deduped
+    addMessage(chatMessage); // optimistic (deduped)
     try {
       socketRef.current?.send(
         JSON.stringify({
@@ -529,34 +512,23 @@ function AppInner() {
     } catch {}
   };
 
-  const addServer = (id: string, label?: string, type: ServerItem["type"] = "server") => {
+  const addServer = (id: string, label?: string) => {
     if (!id) return;
     const sid = String(id);
     setServers((prev) => {
       if (prev.some((s) => s && s.id === sid)) return prev;
-      const item: ServerItem = { id: sid, label: label ?? sid.slice(0, 6), type };
+      const item: ServerItem = { id: sid, label: label ?? sid.slice(0, 6), type: "server" };
       return [...prev, item];
     });
   };
 
   const navigateToServer = (id: string) => {
     if (!id) return;
-    addServer(id, id.slice(0, 6), id.startsWith("dm--") ? "dm" : "server");
+    addServer(id, id.slice(0, 6));
     window.location.pathname = `/${id}`;
   };
 
-  const startDMWith = (p: Participant) => {
-    if (!p) return;
-    const otherId = p.id ?? `u:${p.user}`;
-    const myId = clientId;
-    const ids = [myId, otherId].sort();
-    const dmId = `dm--${ids.join("--")}`;
-    addServer(dmId, `DM ${p.user}`, "dm");
-    navigateToServer(dmId);
-  };
-
-  const serverIcons = useMemo(() => servers.filter((s) => s.type !== "dm"), [servers]);
-  const dmList = useMemo(() => servers.filter((s) => s.type === "dm"), [servers]);
+  const serverIcons = useMemo(() => servers, [servers]);
 
   /* ---------------- render ---------------- */
   return (
@@ -597,7 +569,7 @@ function AppInner() {
             title="New room"
             onClick={() => {
               const r = nanoid(8);
-              addServer(r, r.slice(0, 6), "server");
+              addServer(r, r.slice(0, 6));
               navigateToServer(r);
             }}
             style={{ ...S.serverIcon, width: 40, height: 40, borderRadius: 10, background: "#111827", color: "white" }}
@@ -607,70 +579,130 @@ function AppInner() {
         </div>
       </div>
 
-      {/* left panel (brand, groups, scenes list) */}
+      {/* left sidebar: channels grouped like the mobile image */}
       <aside style={S.leftPanel}>
         <div style={S.brand}>
           <div style={S.brandLogo}>B</div>
-          <div style={S.brandTitle}>Brainwave</div>
+          <div style={S.brandTitle}>Design Buddies</div>
         </div>
 
         <div>
-          <div style={S.groupLabel}>Explore</div>
+          <div style={S.groupLabel}>Job Search</div>
           <div
-            style={{ ...S.pillItem, ...S.pillItemActive }}
-            onClick={() => navigateToServer("explore")}
+            onClick={() => navigateToServer("paid-opportunities")}
+            style={{ ...S.channelRow }}
           >
-            <div style={S.pillIcon}>🔍</div>
-            <div style={{ fontWeight: 700 }}>Explore</div>
+            <div style={S.channelIcon}>💼</div>
+            <div style={{ fontWeight: 700 }}>paid-opportunities</div>
+          </div>
+          <div
+            onClick={() => navigateToServer("for-hire")}
+            style={{ ...S.channelRow }}
+          >
+            <div style={S.channelIcon}>🚀</div>
+            <div style={{ fontWeight: 700 }}>for-hire</div>
           </div>
         </div>
 
         <div>
-          <div style={S.groupLabel}>Assets</div>
+          <div style={S.groupLabel}>General Discussion</div>
           <div
-            style={{
-              ...S.pillItem,
-              borderRadius: 14,
-              background: "transparent",
-              alignItems: "center",
-            }}
-            onClick={() => navigateToServer("assets")}
+            onClick={() => navigateToServer("introductions")}
+            style={{ ...S.channelRow }}
           >
-            <div style={S.pillIcon}>📦</div>
-            <div style={{ fontWeight: 700 }}>Assets</div>
-            <div style={S.badge}>{messages.length}</div>
+            <div style={S.channelIcon}>🌱</div>
+            <div>introductions</div>
+          </div>
+
+          <div
+            onClick={() => navigateToServer("general")}
+            style={{ ...S.channelRow, ...(roomId === "general" ? S.channelRowActive : {}) }}
+          >
+            <div style={S.channelIcon}>#</div>
+            <div style={{ fontWeight: 700 }}>general</div>
+          </div>
+
+          <div
+            onClick={() => navigateToServer("design-discussions")}
+            style={{ ...S.channelRow }}
+          >
+            <div style={S.channelIcon}>🎨</div>
+            <div style={{ fontWeight: 700 }}>design-discussions</div>
+            <div style={{ marginLeft: "auto", color: S.muted, fontSize: 12 }}>3 New</div>
+          </div>
+
+          <div
+            onClick={() => navigateToServer("professionals-hangout")}
+            style={{ ...S.channelRow }}
+          >
+            <div style={S.channelIcon}>💎</div>
+            <div>professionals-hangout</div>
+          </div>
+
+          <div
+            onClick={() => navigateToServer("support-group")}
+            style={{ ...S.channelRow }}
+          >
+            <div style={S.channelIcon}>💖</div>
+            <div>support-group</div>
           </div>
         </div>
 
-        <div style={{ marginTop: 6 }}>
-          <div style={S.groupLabel}>Scenes</div>
-          <div style={S.convList}>
-            {/* example "My Scenes" + a few folders */}
-            {[
-              { id: "sc-my", label: "My Scenes" },
-              { id: "sc-new", label: "New Folder" },
-              { id: "sc-unt", label: "Untitled Folder" },
-              { id: "sc-3d", label: "3D Icons" },
-            ].map((c) => {
-              const active = c.id === roomId;
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => navigateToServer(c.id)}
-                  style={{ ...S.convItem, ...(active ? S.convItemActive : {}) }}
-                >
-                  <div style={S.convItemIcon}>📁</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700 }}>{c.label}</div>
-                  </div>
-                </div>
-              );
-            })}
+        <div>
+          <div style={S.groupLabel}>Design Buddies Events</div>
+          <div
+            onClick={() => navigateToServer("design-challenges")}
+            style={{ ...S.channelRow }}
+          >
+            <div style={S.channelIcon}>🐰</div>
+            <div>design-challenges</div>
           </div>
         </div>
 
-        <div style={{ marginTop: "auto", fontSize: 13, color: S.muted }}>
-          Need help? Submit feedback
+        <div>
+          <div style={S.groupLabel}>Ask For Help</div>
+          <div
+            onClick={() => navigateToServer("ask-professionals")}
+            style={{ ...S.channelRow }}
+          >
+            <div style={S.channelIcon}>👋</div>
+            <div style={{ fontWeight: 700 }}>ask-professionals</div>
+          </div>
+
+          <div
+            onClick={() => navigateToServer("career-questions")}
+            style={{ ...S.channelRow }}
+          >
+            <div style={S.channelIcon}>🏢</div>
+            <div>career-questions</div>
+          </div>
+        </div>
+
+        {/* sticky bottom nav inside leftPanel to emulate the mobile image */}
+        <div style={{ marginTop: 12, marginBottom: 6 }} />
+
+        <div style={S.bottomNavWrap}>
+          <div style={S.bottomNav}>
+            <div style={S.navItem} onClick={() => navigateToServer("servers")}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#111827", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>🏠</div>
+              <div>Servers</div>
+            </div>
+
+            <div style={S.navItem} onClick={() => navigateToServer("messages")}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>💬</div>
+              <div>Messages</div>
+            </div>
+
+            <div style={S.navItem} onClick={() => navigateToServer("notifications")}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>🔔</div>
+              <div>Notifications</div>
+            </div>
+
+            <div style={S.navItem} onClick={() => navigateToServer("you")}>
+              <div style={{ width: 32, height: 32, borderRadius: 999, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>{initialsFromName(name)}</div>
+              <div>You</div>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -679,37 +711,52 @@ function AppInner() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>CC</div>
           <div>
-            <div style={S.headerTitle}>My Scenes</div>
-            <div style={{ color: S.muted, fontSize: 13 }}>Browse and manage your scenes</div>
+            <div style={S.headerTitle}>#{roomId}</div>
+            <div style={{ color: S.muted, fontSize: 13 }}>Channel</div>
           </div>
         </div>
       </header>
 
-      {/* center messages / content area */}
+      {/* center messages */}
       <main style={S.center}>
         <div style={S.messagesPanel}>
-          {/* grid like cards — simplified list to resemble the image */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
-            {visibleMessages.slice(-6).map((m) => (
-              <div key={m.id} style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 6px 18px rgba(16,24,40,0.04)" }}>
-                <div style={{ height: 160, borderRadius: 10, background: "#fafafa", marginBottom: 12 }} />
-                <div style={{ fontWeight: 700 }}>{m.user}</div>
-                <div style={{ color: S.muted, marginTop: 6 }}>{m.content.slice(0, 80)}</div>
-              </div>
-            ))}
+          <div id="messages-list" style={S.messagesList} role="log" aria-live="polite">
+            {visibleMessages.length === 0 ? (
+              <div style={{ color: S.muted, textAlign: "center", padding: 20 }}>No messages yet — say hello 👋</div>
+            ) : (
+              visibleMessages.map((m) => {
+                const isMe = m.user === name;
+                return (
+                  <div
+                    key={m.id}
+                    style={{
+                      display: "flex",
+                      flexDirection: isMe ? "row-reverse" : "row",
+                      alignItems: "flex-start",
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }} aria-hidden>
+                      {initialsFromName(m.user)}
+                    </div>
 
-            {/* fallback sample cards if empty */}
-            {visibleMessages.length === 0 &&
-              [1, 2, 3].map((n) => (
-                <div key={n} style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 6px 18px rgba(16,24,40,0.04)" }}>
-                  <div style={{ height: 160, borderRadius: 10, background: "#fafafa", marginBottom: 12 }} />
-                  <div style={{ fontWeight: 700 }}>Delivery Robot on Wheels</div>
-                  <div style={{ color: S.muted, marginTop: 6 }}>3D Icons</div>
-                </div>
-              ))}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <div style={{ fontWeight: 700 }}>{m.user}</div>
+                        <div style={{ fontSize: 11, color: S.muted }}>
+                          {m.role}&nbsp;•&nbsp;{typeof (m as any).created_at === "string" ? new Date((m as any).created_at).toLocaleTimeString() : ""}
+                        </div>
+                      </div>
+                      <div style={isMe ? S.bubbleMe : S.bubbleThem}>
+                        <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
-          {/* composer */}
           <div style={S.composerWrap}>
             <form
               onSubmit={(e) => {
@@ -724,7 +771,7 @@ function AppInner() {
                 input.focus();
               }}
             >
-              <input name="content" ref={inputRef} style={S.input} placeholder={`Send a message or create a scene...`} autoComplete="off" />
+              <input name="content" ref={inputRef} style={S.input} placeholder={`Message #${roomId}`} autoComplete="off" />
             </form>
           </div>
         </div>
@@ -742,7 +789,7 @@ function AppInner() {
 
         <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 8 }}>Details</div>
-          <div style={{ color: S.muted, fontSize: 13 }}>A clean area to show profile, notes, or scene metadata.</div>
+          <div style={{ color: S.muted, fontSize: 13 }}>A clean area to show profile, notes, or channel metadata.</div>
         </div>
       </aside>
     </div>

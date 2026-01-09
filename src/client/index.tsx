@@ -243,7 +243,21 @@ function AppInner() {
   const navigate = useNavigate();
   const roomId = room ?? "general";
 
+  const [name, setName] = useState(() => {
+    try { const v = localStorage.getItem("cc:name"); if (v) return v; } catch {}
+    const n = names[Math.floor(Math.random() * names.length)];
+    try { localStorage.setItem("cc:name", n); } catch {}
+    return n;
+  });
+
   const [draft, setDraft] = useState(name);
+
+  const [clientId] = useState(() => {
+    try { const v = localStorage.getItem("cc:clientId"); if (v) return v; } catch {}
+    const id = nanoid(8);
+    try { localStorage.setItem("cc:clientId", id); } catch {}
+    return id;
+  });
   
   const [name, setName] = useState(() => {
   try { const v = localStorage.getItem("cc:name"); if (v) return v; } catch {}

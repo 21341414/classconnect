@@ -80,7 +80,7 @@ html,body,#root{height:100%;margin:0;background:var(--page-bg);font-family:-appl
   border-radius:999px;
   border:none;
   outline:none;
-  background::#e8e8e8;
+  background:transparent;
   color:#333;
   font-size:15px;
   line-height:18px;

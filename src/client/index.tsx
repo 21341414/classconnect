@@ -13,11 +13,11 @@ import { nanoid } from "nanoid";
 
 import { names, type ChatMessage, type Message } from "../shared";
 
-/* ---------- Types ---------- */
+/* ---------------- Types ---------------- */
 type Theme = "light" | "dark";
 
 type ServerItem = {
-  id: string; // room id
+  id: string;
   label?: string;
   type?: "server" | "dm";
 };
@@ -29,7 +29,7 @@ type Participant = {
   id?: string;
 };
 
-/* ---------- Persistent state helper (defensive) ---------- */
+/* ---------------- persistent state helper (defensive) ---------------- */
 function usePersistentState<T>(key: string, initial: T | (() => T)) {
   const initializer = typeof initial === "function" ? (initial as () => T) : () => initial;
   const [state, setState] = useState<T>(() => {
@@ -48,233 +48,252 @@ function usePersistentState<T>(key: string, initial: T | (() => T)) {
   return [state, setState] as const;
 }
 
-/* ---------- Styles (light default, Discord-like layout) ---------- */
+/* ---------------- styles (match image: clean left sidebar with groups) ---------------- */
 const styles = (theme: Theme) => {
   const isDark = theme === "dark";
-  const bg = isDark ? "#0f1720" : "#f5f6f8";
-  const surface = isDark ? "#0b1220" : "#ffffff";
-  const panel = isDark ? "#07101a" : "#ffffff";
+  const bg = isDark ? "#0b1220" : "#f5f6f8";
+  const sidebarBg = isDark ? "#07101a" : "#ffffff";
+  const muted = isDark ? "#9aa6b2" : "#9ca3af";
   const text = isDark ? "#e6eef8" : "#111827";
-  const muted = isDark ? "#9aa6b2" : "#6b7280";
-  const accent = "#6c5ce7"; // purple-ish discord-like
-  const messageMeBg = accent;
-  const messageThemBg = isDark ? "#0e1720" : "#f3f4f6";
+  const accent = "#6c5ce7";
+  const selectedBg = isDark ? "rgba(108,92,231,0.08)" : "#f3f4f6";
 
   return {
     app: {
       width: "100vw",
       height: "100vh",
       display: "grid",
-      // left nav | conversations | messages | right panel
-      gridTemplateColumns: "72px 300px 1fr 320px",
-      gridTemplateRows: "64px 1fr",
-      boxSizing: "border-box" as const,
+      // servers | left menu (folders/dms) | center | right
+      gridTemplateColumns: "72px 300px 1fr 340px",
+      gridTemplateRows: "72px 1fr",
+      gap: 0,
       background: bg,
       color: text,
-      gap: 0,
-      overflow: "hidden",
       fontFamily:
         '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+      boxSizing: "border-box" as const,
+      overflow: "hidden",
     },
-    leftNav: {
+
+    /* left-most servers column */
+    serversCol: {
       gridColumn: "1 / 2",
       gridRow: "1 / -1",
-      background: isDark ? "#071025" : "#fff",
-      borderRight: `1px solid ${isDark ? "#0b1722" : "#e6e9ef"}`,
+      padding: 12,
       display: "flex",
       flexDirection: "column" as const,
       alignItems: "center",
-      padding: "12px 8px",
       gap: 12,
+      background: "transparent",
     },
-    leftNavButton: {
+    serverIcon: {
       width: 48,
       height: 48,
       borderRadius: 12,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: accent,
-      color: "white",
       fontWeight: 700,
       cursor: "pointer",
-      boxShadow: "0 6px 16px rgba(108,92,231,0.12)",
+      border: "none",
     },
-    convColumn: {
+
+    /* second column: the clean white panel with rounded left corners (matching image) */
+    leftPanel: {
       gridColumn: "2 / 3",
       gridRow: "1 / -1",
-      borderRight: `1px solid ${isDark ? "#071622" : "#eef2f7"}`,
-      background: isDark ? "#05121a" : "#fbfdff",
-      padding: "12px",
-      overflow: "auto",
+      background: sidebarBg,
+      borderRight: `1px solid ${isDark ? "#0b1722" : "#eef2f7"}`,
+      padding: "20px 18px",
+      boxSizing: "border-box" as const,
       display: "flex",
       flexDirection: "column" as const,
-      gap: 12,
+      gap: 14,
+      // big rounded left edge like the example
+      borderTopLeftRadius: 18,
+      borderBottomLeftRadius: 18,
     },
-    convHeader: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 8,
-    },
-    convList: { display: "flex", flexDirection: "column" as const, gap: 8, overflow: "auto" },
-    convRow: {
+
+    brand: {
       display: "flex",
       alignItems: "center",
       gap: 12,
-      padding: "8px",
-      borderRadius: 10,
+      paddingBottom: 6,
+    },
+    brandLogo: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      background: "#111827",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "white",
+      fontWeight: 800,
+      fontSize: 14,
+    },
+    brandTitle: { fontWeight: 800, fontSize: 18 },
+
+    /* grouped menu */
+    groupLabel: { fontSize: 13, color: muted, marginTop: 6, marginBottom: 6 },
+    pillItem: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "10px 12px",
+      borderRadius: 12,
       cursor: "pointer",
+      background: "transparent",
     },
-    convRowActive: {
-      background: "rgba(108,92,231,0.06)",
+    pillItemActive: {
+      background: selectedBg,
+      boxShadow: "inset 0 1px 0 rgba(0,0,0,0.02)",
     },
-    convAvatar: {
-      width: 40,
-      height: 40,
+    pillIcon: {
+      width: 36,
+      height: 36,
       borderRadius: 8,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
+      background: "#eef2ff",
       fontWeight: 700,
-      color: "white",
-      background: "#9b8cff",
+      flexShrink: 0,
+    },
+    badge: {
+      marginLeft: "auto",
+      background: "#ffffff",
+      border: `1px solid rgba(0,0,0,0.04)`,
+      padding: "4px 8px",
+      borderRadius: 10,
+      fontSize: 13,
+      color: muted,
+    },
+
+    /* conversation list style for the Scenes/DMs area */
+    convList: {
+      display: "flex",
+      flexDirection: "column" as const,
+      gap: 8,
+      overflow: "auto",
+    },
+    convItem: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "10px 12px",
+      borderRadius: 10,
+      cursor: "pointer",
+    },
+    convItemActive: {
+      background: selectedBg,
+    },
+    convItemIcon: {
+      width: 36,
+      height: 36,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 8,
+      background: "#fff",
+      boxShadow: "0 6px 18px rgba(16,24,40,0.04)",
       flexShrink: 0,
     },
 
+    /* center message area */
     header: {
       gridColumn: "3 / 4",
       gridRow: "1 / 2",
       display: "flex",
       alignItems: "center",
-      padding: "12px 16px",
+      padding: "18px",
       borderBottom: `1px solid ${isDark ? "#071622" : "#eef2f7"}`,
-      background: panel,
+      background: "transparent",
       gap: 12,
-      zIndex: 20,
     },
-    headerTitle: { fontSize: 16, fontWeight: 700 as const },
+    headerTitle: { fontSize: 16, fontWeight: 700 },
 
     center: {
       gridColumn: "3 / 4",
       gridRow: "2 / -1",
-      padding: "16px",
+      padding: "20px",
       display: "flex",
       flexDirection: "column" as const,
-      minHeight: 0,
       gap: 12,
+      minHeight: 0,
+      overflow: "hidden",
     },
+
     messagesPanel: {
       flex: 1,
       display: "flex",
       flexDirection: "column" as const,
-      background: surface,
-      borderRadius: 12,
-      boxShadow: "inset 0 1px 0 rgba(16,24,39,0.02)",
-      minHeight: 0,
+      gap: 12,
       overflow: "hidden",
-      padding: 12,
     },
     messagesList: {
       flex: 1,
       overflow: "auto",
-      padding: "8px 12px",
       display: "flex",
       flexDirection: "column" as const,
       gap: 12,
+      paddingRight: 8,
+      paddingLeft: 8,
     },
-    composer: {
+
+    /* composer */
+    composerWrap: {
       borderTop: `1px solid ${isDark ? "#071622" : "#eef2f7"}`,
-      padding: 12,
-      display: "flex",
-      gap: 8,
-      alignItems: "center",
-      background: "transparent",
+      paddingTop: 12,
+      paddingBottom: 12,
     },
     input: {
-      flex: 1,
+      width: "100%",
       padding: "12px 14px",
-      borderRadius: 14,
-      border: `2px solid rgba(108,92,231,0.18)`,
-      background: "#fff",
-      color: text,
-      outline: "none",
-      boxShadow: "none",
-    },
-    sendBtn: {
-      background: messageMeBg,
-      color: "white",
-      border: "none",
-      padding: "10px 14px",
       borderRadius: 12,
-      cursor: "pointer",
+      border: `1px solid rgba(17,24,39,0.06)`,
+      background: "#fff",
+      outline: "none",
+      fontSize: 14,
     },
-    rightSidebar: {
+
+    /* right profile */
+    rightPanel: {
       gridColumn: "4 / 5",
       gridRow: "1 / -1",
       padding: 20,
-      background: "#fff",
+      background: "#ffffff",
       borderLeft: `1px solid ${isDark ? "#071622" : "#eef2f7"}`,
       overflow: "auto",
     },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 999,
-      background: "#ddd",
-      color: text,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontWeight: 700,
-      fontSize: 14,
-      flexShrink: 0,
-    },
+
     bubbleMe: {
       alignSelf: "flex-end",
-      background: messageMeBg,
+      background: accent,
       color: "white",
-      padding: "12px 14px",
-      borderRadius: 16,
-      maxWidth: "72%",
+      padding: "10px 14px",
+      borderRadius: 14,
+      maxWidth: "70%",
       wordBreak: "break-word" as const,
-      boxShadow: "0 6px 18px rgba(108,92,231,0.08)",
     },
     bubbleThem: {
       alignSelf: "flex-start",
-      background: messageThemBg,
+      background: "#f7f7fb",
       color: text,
       padding: "10px 14px",
       borderRadius: 12,
-      maxWidth: "72%",
+      maxWidth: "70%",
       wordBreak: "break-word" as const,
-      border: "1px solid #eef2f7",
+      border: "1px solid #f1f3f5",
     },
-    authorLine: { fontSize: 13, fontWeight: 700 as const, marginBottom: 6, color: text },
-    timeSmall: { fontSize: 11, color: muted, marginLeft: 8 },
-    participantsTitle: { fontWeight: 700 as const, marginBottom: 8 },
-    participantRow: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      padding: "8px 6px",
-      borderRadius: 6,
-      cursor: "pointer",
-    },
-    presenceDot: (status: "online" | "offline") => ({
-      width: 9,
-      height: 9,
-      borderRadius: 999,
-      background: status === "online" ? "#39d353" : muted,
-      flexShrink: 0,
-    }),
+
     muted,
     text,
     accent,
   };
 };
 
-/* ---------------- Helper utilities ---------------- */
+/* ---------------- helpers ---------------- */
 function initialsFromName(name: string) {
   if (!name) return "U";
   const parts = name.trim().split(/\s+/);
@@ -282,16 +301,14 @@ function initialsFromName(name: string) {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-/* ---------------- Main App component ---------------- */
+/* ---------------- AppInner ---------------- */
 function AppInner() {
   const { room } = useParams<{ room: string }>();
   const navigate = useNavigate();
   const roomId = room ?? "main";
 
-  // persistent client id (used for deterministic DM ids)
   const [clientId] = usePersistentState<string>("cc:clientId", () => nanoid(8));
 
-  // name persisted
   const [name, setName] = usePersistentState<string>("cc:name", () => {
     const stored = localStorage.getItem("cc:name");
     if (stored) return stored;
@@ -299,18 +316,14 @@ function AppInner() {
   });
   const [editingName, setEditingName] = useState(name);
 
-  // theme: fixed to light
   const theme: Theme = "light";
 
-  // messages persisted per room
   const messagesKey = `cc:messages:${roomId}`;
   const [messages, setMessages] = usePersistentState<ChatMessage[]>(messagesKey, []);
 
-  // participants persisted per room (simple fallback)
   const participantsKey = `cc:participants:${roomId}`;
   const [participants, setParticipants] = usePersistentState<Participant[]>(participantsKey, []);
 
-  // servers persisted (list of objects). Migrate & sanitize any malformed entries.
   const [servers, setServers] = usePersistentState<ServerItem[]>("cc:servers", () => {
     try {
       const raw = localStorage.getItem("cc:servers");
@@ -343,7 +356,6 @@ function AppInner() {
     }
   });
 
-  // ensure current room is in servers list (defensive)
   useEffect(() => {
     if (!roomId) return;
     const found = servers.find((s) => s && s.id === roomId);
@@ -361,15 +373,12 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  // local refs
   const socketRef = useRef<any>(null);
   const heartbeatRef = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // computed styles for current theme
   const S = useMemo(() => styles(theme), [theme]);
 
-  // helper: safely add message (dedupe by id)
   const addMessage = useCallback((m: ChatMessage) => {
     if (!m || !m.id) return;
     setMessages((prev) => {
@@ -378,15 +387,12 @@ function AppInner() {
     });
   }, [setMessages]);
 
-  // helper: update message (replace by id)
   const updateMessage = useCallback((m: ChatMessage) => {
     setMessages((prev) => prev.map((x) => (x.id === m.id ? m : x)));
   }, [setMessages]);
 
-  // visible messages: filter out system
   const visibleMessages = useMemo(() => messages.filter((m) => m.role !== "system"), [messages]);
 
-  // handle incoming messages
   const handleIncoming = useCallback(
     (evt: MessageEvent) => {
       try {
@@ -428,7 +434,7 @@ function AppInner() {
           })) as Participant[];
           setParticipants(normalized);
         } else {
-          // ignore unknown/system messages to avoid noise
+          // ignore
         }
       } catch (err) {
         console.warn("Failed to parse incoming message", err);
@@ -437,7 +443,6 @@ function AppInner() {
     [addMessage, updateMessage, setParticipants],
   );
 
-  // attach socket via usePartySocket
   const partySocket = usePartySocket({
     party: "chat",
     room: roomId,
@@ -448,7 +453,6 @@ function AppInner() {
     socketRef.current = partySocket;
   }, [partySocket]);
 
-  // presence: announce online on mount, offline on unload, heartbeat
   useEffect(() => {
     const sendPresence = (status: "online" | "offline") => {
       const payload = {
@@ -474,9 +478,7 @@ function AppInner() {
     sendPresence("online");
     heartbeatRef.current = window.setInterval(() => sendPresence("online"), 30000);
 
-    const onUnload = () => {
-      sendPresence("offline");
-    };
+    const onUnload = () => sendPresence("offline");
     window.addEventListener("beforeunload", onUnload);
     return () => {
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
@@ -486,17 +488,11 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, roomId, clientId]);
 
-  // scroll to bottom on new visible messages
   useEffect(() => {
     const el = document.getElementById("messages-list");
-    if (el) {
-      requestAnimationFrame(() => {
-        el.scrollTop = el.scrollHeight;
-      });
-    }
+    if (el) requestAnimationFrame(() => (el.scrollTop = el.scrollHeight));
   }, [visibleMessages]);
 
-  // send chat (optimistic + dedupe based on id)
   const sendChat = (content: string) => {
     if (!content.trim()) return;
     const chatMessage: ChatMessage = {
@@ -505,8 +501,7 @@ function AppInner() {
       user: name,
       role: "user",
     };
-    // optimistic add (dedupe prevents duplicate when server echo arrives)
-    addMessage(chatMessage);
+    addMessage(chatMessage); // optimistic, deduped
     try {
       socketRef.current?.send(
         JSON.stringify({
@@ -534,7 +529,6 @@ function AppInner() {
     } catch {}
   };
 
-  /* ---------- Server management ---------- */
   const addServer = (id: string, label?: string, type: ServerItem["type"] = "server") => {
     if (!id) return;
     const sid = String(id);
@@ -551,7 +545,6 @@ function AppInner() {
     window.location.pathname = `/${id}`;
   };
 
-  /* ---------- DM utilities ---------- */
   const startDMWith = (p: Participant) => {
     if (!p) return;
     const otherId = p.id ?? `u:${p.user}`;
@@ -562,198 +555,185 @@ function AppInner() {
     navigateToServer(dmId);
   };
 
-  /* ---------- Derived conversations (servers) ---------- */
-  const conversations = useMemo(() => {
-    return servers.map((s) => ({
-      ...s,
-      label: s?.label ?? (s?.id ? String(s.id).slice(0, 6) : "??"),
-    }));
-  }, [servers]);
+  const serverIcons = useMemo(() => servers.filter((s) => s.type !== "dm"), [servers]);
+  const dmList = useMemo(() => servers.filter((s) => s.type === "dm"), [servers]);
 
-  /* ---------- Render ---------- */
+  /* ---------------- render ---------------- */
   return (
     <div style={S.app} data-theme={theme} className="chat-fullscreen">
-      {/* Left nav */}
-      <nav style={S.leftNav}>
-        <div style={S.leftNavButton} title="ClassConnect" onClick={() => navigateToServer("home")}>CC</div>
+      {/* servers (left-most) */}
+      <div style={S.serversCol}>
+        <button
+          title="ClassConnect"
+          onClick={() => navigateToServer("home")}
+          style={{ ...S.serverIcon, background: "#6c5ce7", color: "white" }}
+        >
+          CC
+        </button>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {serverIcons.map((s) => {
+            const label = s?.label ?? s?.id ?? "S";
+            const isActive = s.id === roomId;
+            return (
+              <button
+                key={s.id}
+                title={label}
+                onClick={() => navigateToServer(s.id)}
+                style={{
+                  ...S.serverIcon,
+                  background: isActive ? "#6c5ce7" : "#eef2ff",
+                  color: isActive ? "white" : "#111827",
+                }}
+              >
+                {String(label).slice(0, 2).toUpperCase()}
+              </button>
+            );
+          })}
+        </div>
 
         <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8, width: "100%", alignItems: "center" }}>
           <button
-            aria-label="New room"
+            title="New room"
             onClick={() => {
               const r = nanoid(8);
               addServer(r, r.slice(0, 6), "server");
               navigateToServer(r);
             }}
-            style={{ ...S.leftNavButton, width: 40, height: 40, background: "#2f3136" }}
-            title="Create new room"
-          >
-            +
-          </button>
-
-          <button
-            aria-label="Add server by id"
-            onClick={() => {
-              const id = window.prompt("Enter server / room id or URL (room id portion):");
-              if (id) {
-                const sanitized = id.trim();
-                if (!sanitized) return;
-                addServer(sanitized, sanitized.slice(0, 6), sanitized.startsWith("dm--") ? "dm" : "server");
-                navigateToServer(sanitized);
-              }
-            }}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              marginTop: 6,
-              background: "#ffffff",
-              border: "1px solid #eef2f7",
-              cursor: "pointer",
-            }}
-            title="Add server"
+            style={{ ...S.serverIcon, width: 40, height: 40, borderRadius: 10, background: "#111827", color: "white" }}
           >
             +
           </button>
         </div>
-      </nav>
+      </div>
 
-      {/* Conversations column */}
-      <aside style={S.convColumn}>
-        <div style={S.convHeader}>
-          <div style={{ fontWeight: 700 }}>Conversations</div>
-          <div style={{ color: S.muted, fontSize: 13 }}>{conversations.length}</div>
+      {/* left panel (brand, groups, scenes list) */}
+      <aside style={S.leftPanel}>
+        <div style={S.brand}>
+          <div style={S.brandLogo}>B</div>
+          <div style={S.brandTitle}>Brainwave</div>
         </div>
 
-        <div style={S.convList}>
-          {conversations.map((c) => {
-            const isActive = c.id === roomId;
-            const label = c.label ?? c.id;
-            return (
-              <div
-                key={c.id}
-                onClick={() => navigateToServer(c.id)}
-                style={{
-                  ...S.convRow,
-                  ...(isActive ? S.convRowActive : {}),
-                }}
-              >
-                <div style={S.convAvatar} aria-hidden>
-                  {initialsFromName(String(label))}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700 }}>{label}</div>
-                  <div style={{ fontSize: 12, color: S.muted, marginTop: 4 }}>Tap to open</div>
-                </div>
-                <div style={{ fontSize: 11, color: S.muted }}>•</div>
-              </div>
-            );
-          })}
-        </div>
-      </aside>
-
-      {/* Header for messages */}
-      <header style={S.header}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={S.avatar}>CC</div>
-          <div>
-            <div style={S.headerTitle}>ClassConnect</div>
-            <div style={{ color: S.muted, fontSize: 13 }}>
-              Room: <span style={{ fontWeight: 700 }}>{roomId}</span>
-            </div>
+        <div>
+          <div style={S.groupLabel}>Explore</div>
+          <div
+            style={{ ...S.pillItem, ...S.pillItemActive }}
+            onClick={() => navigateToServer("explore")}
+          >
+            <div style={S.pillIcon}>🔍</div>
+            <div style={{ fontWeight: 700 }}>Explore</div>
           </div>
         </div>
 
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-          <div style={{ color: S.muted, fontSize: 13 }}>{participants.filter((p) => p.status === "online").length} online</div>
-          <div style={{ width: 1, height: 24, background: S.muted, opacity: 0.12 }} />
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              aria-label="Display name"
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") applyName();
-              }}
-              style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${S.muted}`, background: "transparent", color: S.text }}
-            />
-            <button onClick={() => applyName()} style={{ padding: "8px 10px", borderRadius: 8, cursor: "pointer" }}>
-              Set
-            </button>
+        <div>
+          <div style={S.groupLabel}>Assets</div>
+          <div
+            style={{
+              ...S.pillItem,
+              borderRadius: 14,
+              background: "transparent",
+              alignItems: "center",
+            }}
+            onClick={() => navigateToServer("assets")}
+          >
+            <div style={S.pillIcon}>📦</div>
+            <div style={{ fontWeight: 700 }}>Assets</div>
+            <div style={S.badge}>{messages.length}</div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 6 }}>
+          <div style={S.groupLabel}>Scenes</div>
+          <div style={S.convList}>
+            {/* example "My Scenes" + a few folders */}
+            {[
+              { id: "sc-my", label: "My Scenes" },
+              { id: "sc-new", label: "New Folder" },
+              { id: "sc-unt", label: "Untitled Folder" },
+              { id: "sc-3d", label: "3D Icons" },
+            ].map((c) => {
+              const active = c.id === roomId;
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => navigateToServer(c.id)}
+                  style={{ ...S.convItem, ...(active ? S.convItemActive : {}) }}
+                >
+                  <div style={S.convItemIcon}>📁</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700 }}>{c.label}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ marginTop: "auto", fontSize: 13, color: S.muted }}>
+          Need help? Submit feedback
+        </div>
+      </aside>
+
+      {/* header */}
+      <header style={S.header}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>CC</div>
+          <div>
+            <div style={S.headerTitle}>My Scenes</div>
+            <div style={{ color: S.muted, fontSize: 13 }}>Browse and manage your scenes</div>
           </div>
         </div>
       </header>
 
-      {/* Center messages */}
+      {/* center messages / content area */}
       <main style={S.center}>
         <div style={S.messagesPanel}>
-          <div id="messages-list" style={S.messagesList} role="log" aria-live="polite">
-            {visibleMessages.length === 0 ? (
-              <div style={{ color: S.muted, textAlign: "center", padding: 20 }}>No messages yet — say hello 👋</div>
-            ) : (
-              visibleMessages.map((m) => {
-                const isMe = m.user === name;
-                return (
-                  <div
-                    key={m.id}
-                    style={{
-                      display: "flex",
-                      flexDirection: isMe ? "row-reverse" : "row",
-                      alignItems: "flex-start",
-                      gap: 12,
-                    }}
-                  >
-                    <div style={{ ...S.avatar, width: 40, height: 40, borderRadius: 10 }} aria-hidden>
-                      {initialsFromName(m.user)}
-                    </div>
+          {/* grid like cards — simplified list to resemble the image */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            {visibleMessages.slice(-6).map((m) => (
+              <div key={m.id} style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 6px 18px rgba(16,24,40,0.04)" }}>
+                <div style={{ height: 160, borderRadius: 10, background: "#fafafa", marginBottom: 12 }} />
+                <div style={{ fontWeight: 700 }}>{m.user}</div>
+                <div style={{ color: S.muted, marginTop: 6 }}>{m.content.slice(0, 80)}</div>
+              </div>
+            ))}
 
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                        <div style={S.authorLine}>{m.user}</div>
-                        <div style={S.timeSmall}>
-                          {m.role}&nbsp;•&nbsp;{typeof (m as any).created_at === "string" ? new Date((m as any).created_at).toLocaleTimeString() : ""}
-                        </div>
-                      </div>
-                      <div style={isMe ? S.bubbleMe : S.bubbleThem}>
-                        <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+            {/* fallback sample cards if empty */}
+            {visibleMessages.length === 0 &&
+              [1, 2, 3].map((n) => (
+                <div key={n} style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 6px 18px rgba(16,24,40,0.04)" }}>
+                  <div style={{ height: 160, borderRadius: 10, background: "#fafafa", marginBottom: 12 }} />
+                  <div style={{ fontWeight: 700 }}>Delivery Robot on Wheels</div>
+                  <div style={{ color: S.muted, marginTop: 6 }}>3D Icons</div>
+                </div>
+              ))}
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const form = e.currentTarget as HTMLFormElement;
-              const input = form.elements.namedItem("content") as HTMLInputElement | null;
-              if (!input) return;
-              const text = input.value.trim();
-              if (!text) return;
-              sendChat(text);
-              input.value = "";
-              input.focus();
-            }}
-            style={S.composer}
-          >
-            <input
-              name="content"
-              ref={inputRef}
-              style={S.input}
-              placeholder={`Message #${roomId}`}
-              autoComplete="off"
-            />
-            <button type="submit" style={S.sendBtn}>Send</button>
-          </form>
+          {/* composer */}
+          <div style={S.composerWrap}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.currentTarget as HTMLFormElement;
+                const input = form.elements.namedItem("content") as HTMLInputElement | null;
+                if (!input) return;
+                const text = input.value.trim();
+                if (!text) return;
+                sendChat(text);
+                input.value = "";
+                input.focus();
+              }}
+            >
+              <input name="content" ref={inputRef} style={S.input} placeholder={`Send a message or create a scene...`} autoComplete="off" />
+            </form>
+          </div>
         </div>
       </main>
 
-      {/* Right participant / profile */}
-      <aside style={S.rightSidebar}>
+      {/* right profile */}
+      <aside style={S.rightPanel}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <div style={S.avatar}>{initialsFromName(name)}</div>
+          <div style={{ width: 56, height: 56, borderRadius: 12, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{initialsFromName(name)}</div>
           <div>
             <div style={{ fontWeight: 800 }}>{name}</div>
             <div style={{ color: S.muted, fontSize: 13 }}>{participants.filter((p) => p.status === "online").length} online</div>
@@ -761,69 +741,15 @@ function AppInner() {
         </div>
 
         <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
-          <div style={S.participantsTitle}>Participants</div>
-          <div style={{ color: S.muted, fontSize: 13, marginBottom: 8 }}>{participants.length} total</div>
-
-          <div>
-            {participants.length === 0 ? (
-              <div style={{ color: S.muted }}>No participants yet</div>
-            ) : (
-              participants.map((p) => (
-                <div
-                  key={p.user}
-                  style={{
-                    ...S.participantRow,
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <div style={{ ...S.avatar, width: 40, height: 40, borderRadius: 10 }}>{initialsFromName(p.user)}</div>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <div style={{ fontWeight: 700 }}>{p.user}</div>
-                      <div style={{ fontSize: 12, color: S.muted }}>{p.lastSeen ? new Date(p.lastSeen).toLocaleString() : p.status}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button
-                      onClick={() => {
-                        const el = inputRef.current;
-                        if (el) {
-                          el.focus();
-                          el.value = `@${p.user} `;
-                        }
-                      }}
-                      style={{ padding: "6px 8px", borderRadius: 6, cursor: "pointer" }}
-                      title="Mention"
-                    >
-                      @
-                    </button>
-
-                    <button
-                      onClick={() => startDMWith(p)}
-                      style={{ padding: "6px 8px", borderRadius: 6, cursor: "pointer" }}
-                      title="Start DM"
-                    >
-                      DM
-                    </button>
-
-                    <div style={S.presenceDot(p.status)} />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div style={{ marginTop: 16, color: S.muted, fontSize: 13 }}>
-          Tip: Click a participant to mention them or start a DM. Servers and DMs are saved locally.
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>Details</div>
+          <div style={{ color: S.muted, fontSize: 13 }}>A clean area to show profile, notes, or scene metadata.</div>
         </div>
       </aside>
     </div>
   );
 }
 
-/* ---------------- Router + mount ---------------- */
+/* ---------------- mount ---------------- */
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>

@@ -484,47 +484,36 @@ function AppInner() {
               </div>
             ))}
           </div>
-         <div style={{ marginTop: 12, fontSize: 12, color: "#9aa0a6" }}>
-  Your name:{" "}
-  <input
-    type="text"
-    value={name}
-    onChange={(e) => {
-      // update local draft only
-      setDraft(e.target.value);
-    }}
-    onKeyDown={(e) => {
-      if (e.key === "Enter") {
-        const newName = draft.trim();
-        if (!newName) return;
-        setName(newName); // update main state
-        try { localStorage.setItem("cc:name", newName); } catch {}
-
-        try {
-          socketRef.current?.send(JSON.stringify({
-            type: "presence",
-            user: newName,
-            status: "online",
-            id: clientId,
-            lastSeen: new Date().toISOString(),
-          }));
-        } catch {}
-      }
-    }}
-    onBlur={() => setDraft(name)} // reset draft if user clicks away
-    style={{
-      fontWeight: 700,
-      fontSize: 12,
-      border: "none",
-      borderRadius: 4,
-      padding: "2px 4px",
-      background: "transparent",
-      color: "#111827",
-      width: 80,
-    }}
-  />
-</div>
-
+         <input
+  type="text"
+  value={draft}
+  onChange={(e) => setDraft(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      setName(draft); // commit change
+      try { localStorage.setItem("cc:name", draft); } catch {};
+      try {
+        socketRef.current?.send(JSON.stringify({
+          type: "presence",
+          user: draft,
+          status: "online",
+          id: clientId,
+          lastSeen: new Date().toISOString(),
+        }));
+      } catch {}
+    }
+  }}
+  style={{
+    fontWeight: 700,
+    fontSize: 12,
+    border: "none",
+    borderRadius: 4,
+    padding: "2px 4px",
+    background: "transparent",
+    color: "#111827",
+    width: 80,
+  }}
+/>
         </div>
       </div>
     </div>

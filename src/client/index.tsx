@@ -30,6 +30,26 @@ const UIVERSE_CSS = `
   --input-bg:#ffffff;
   --accent:#6c5ce7;
 }
+
+.container-ia-chat {
+  --input-bg: var(--page-bg);
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  max-width:640px;
+  transition:all .18s ease;
+  background:#e8e8e8;
+  border: 1px solid rgba(16,24,40,0.04);
+  border-radius: 999px;
+}
+
+.container-ia-chat .input-text {
+  box-shadow: none;
+}
+
+
 html,body,#root{height:100%;margin:0;background:var(--page-bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
 .fullscreen-grid{display:grid;grid-template-columns:1fr 320px;height:100vh;width:100%;box-sizing:border-box}
 .center-column{display:flex;flex-direction:column;justify-content:flex-start;padding:28px;gap:12px;overflow:hidden}
@@ -44,18 +64,7 @@ html,body,#root{height:100%;margin:0;background:var(--page-bg);font-family:-appl
 .presence-dot{width:10px;height:10px;border-radius:999px}
 
 /* input box + icons */
-.container-ia-chat{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  max-width:640px;
-  transition:all .18s ease;
-  background:#e8e8e8;
-  border: 1px solid rgba(16,24,40,0.04);
-  border-radius: 999px;
-}
+
 
 /* left icon group */
 .container-upload-files{

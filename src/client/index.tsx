@@ -10,7 +10,6 @@ import {
   useParams,
 } from "react-router";
 import { nanoid } from "nanoid";
-import { Hash, Plus, Send } from "lucide-react";
 
 import { names, type ChatMessage, type Message } from "../shared";
 
@@ -143,7 +142,7 @@ function App() {
           className="w-12 h-12 rounded-2xl bg-slate-800 text-green-500 font-bold text-2xl transition-all duration-200 hover:rounded-xl hover:bg-green-600 hover:text-white flex items-center justify-center"
           title="Create new server"
         >
-          <Plus size={24} />
+          +
         </button>
       </aside>
 
@@ -151,7 +150,7 @@ function App() {
       <main className="flex-1 flex flex-col bg-slate-900">
         {/* Header */}
         <header className="h-14 border-b border-slate-800 px-4 flex items-center shadow-sm bg-slate-800">
-          <Hash size={24} className="text-gray-400 mr-2" />
+          <span className="text-gray-400 mr-2 text-xl">#</span>
           <span className="font-semibold text-lg">{room}</span>
         </header>
 
@@ -207,9 +206,9 @@ function App() {
             <button
               type="submit"
               disabled={!messageInput.trim()}
-              className="p-2 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              className="p-2 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 text-white font-bold"
             >
-              <Send size={20} />
+              ↑
             </button>
           </div>
         </form>

@@ -52,6 +52,9 @@ html,body,#root{height:100%;margin:0;background:var(--page-bg);font-family:-appl
   width:100%;
   max-width:640px;
   transition:all .18s ease;
+  background: var(--page-bg);
+  border: 1px solid rgba(16,24,40,0.04);
+  border-radius: 999px;
 }
 
 /* left icon group */

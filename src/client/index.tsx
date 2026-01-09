@@ -49,9 +49,9 @@ const UIVERSE_CSS = `
 .container-ia-chat > .input-text {
   background-color:transparent !important;
   border: none !important;
-  box-shadow: 0 6px 18px rgba(16,24,40,0.04) !important;
   color: #333 !important;
   padding-left: 56px !important;
+  padding-bottom: 10px !important;
   text-align: center !important;
 }
 
